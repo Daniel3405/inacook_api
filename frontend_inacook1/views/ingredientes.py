@@ -4,6 +4,9 @@ from .. forms import IngredienteForm
 from inacook.models import Ingrediente, UnidadMedicion, Usuario
 
 def crear_ingrediente(request):
+    if not request.session.get('token'):
+        return redirect('login')
+
     unidades_data = UnidadMedicion.objects.all()
     # Preparar choices para el form
     choices = [(u.id, f"{u.nombre} ({u.abreviatura})") for u in unidades_data]
