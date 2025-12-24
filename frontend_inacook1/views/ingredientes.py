@@ -44,6 +44,9 @@ def crear_ingrediente(request):
 
 
 def ver_ingredientes(request):
+    if not request.session.get('token'):
+        return redirect('login')
+    
     ingredientes_qs = Ingrediente.objects.select_related('unidad_medicion', 'usuario__user').all()
     
     ingredientes = []
@@ -99,6 +102,8 @@ def eliminar_ingrediente(request, id):
 
 
 def editar_ingrediente(request, id):
+    if not request.session.get('token'):
+        return redirect('login')
     ingrediente = get_object_or_404(Ingrediente, id=id)
     unidades_data = UnidadMedicion.objects.all()
     choices = [(u.id, f"{u.nombre} ({u.abreviatura})") for u in unidades_data]

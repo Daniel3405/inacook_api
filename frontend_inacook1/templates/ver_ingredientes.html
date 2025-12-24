@@ -33,10 +33,10 @@
                 <td class="text-center">${{ ing.costo_unitario }}</td>
                 {% if ing.unidad_abreviatura %}
                 <td class="text-center">{{ ing.unidad_nombre }} ({{ ing.unidad_abreviatura }})</td>
-                <td class="text-center">{{ ing.usuario_nombre|default:ing.usuario|default:"Desconocido" }}</td>
+                <td class="text-center">{{ ing.usuario_nombre|default:ing.usuario|default:"tu" }}</td>
                 {% else %}
                 <td class="text-center">{{ ing.unidad_nombre }}</td>
-                <td class="text-center">{{ ing.usuario_nombre|default:ing.usuario|default:"Desconocido" }}</td>
+                <td class="text-center">{{ ing.usuario_nombre|default:ing.usuario|default:"desconocido" }}</td>
                 {% endif %}
 
                 <td class="text-center">
