@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mis Recetas - Inacook{% endblock %}
+
+{% block content %}
+<div class="container recetas-container">
+
+    <h1>Mis Recetas</h1>
+
+    {% if recetas_data %}
+    <table class="tabla-recetas">
+        <thead>
+            <tr>
+                <th class="text-center">Imagen</th>
+                <th class="text-center">Nombre</th>
+                <th class="text-center">Categoría</th>
+                <th class="text-center">Aporte (kcal)</th>
+                <th class="text-center">Tiempo</th>
+                <th class="text-center">Precio</th>
+                <th class="text-center">Creado por</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for data in recetas_data %}
+            {% with receta=data.receta precio=data.precio %}
+            <tr>
+
+                <td class="text-center">
+                    {% if receta.imagen %}
+                        {% if receta.imagen.url %}
+                            <img src="{{ receta.imagen.url }}" class="tabla-img">
+                        {% else %}
+                            <img src="{{ receta.imagen }}" class="tabla-img">
+                        {% endif %}
+                    {% else %}
+                        <span class="no-image">Sin imagen</span>
+                    {% endif %}
+                </td>
+
+                <td class="text-center">{{ receta.nombre }}</td>
+                <td class="text-center">{{ receta.categoria }}</td>
+                <td class="text-center">{{ receta.aporte_calorico }}</td>
+                <td class="text-center">{{ receta.tiempo_preparacion }}</td>
+
+                <td class="text-center">
+                    {% if precio != "No calculado" %}
+                    ${{ precio }}
+                    {% else %}
+                    No calculado
+                    {% endif %}
+                </td>
+
+                <td class="text-center">{{ receta.usuario_nombre|default:"Tú" }}</td>
+
+                <td class="text-center acciones-td">
+                    <div class="acciones-btn-group">
+                        <a href="{% url 'editar_receta' receta.id %}" class="btn btn-secondary btn-sm">Editar</a>
+                        <a href="{% url 'borrar_receta' receta.id %}" class="btn btn-danger btn-sm">Borrar</a>
+                        <a href="{% url 'ver_comprobante' receta.id %}" class="btn btn-primary btn-sm">Comprobante</a>
+                    </div>
+                </td>
+
+            </tr>
+            {% endwith %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+    <p class="mensaje-vacio">Aún no has subido recetas.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

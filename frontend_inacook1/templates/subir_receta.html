@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Subir Receta - Inacook{% endblock %}
+
+{% block content %}
+<div class="container subir-receta-container">
+
+    <h1>Subir nueva receta</h1>
+
+    <form method="POST" enctype="multipart/form-data" id="receta-form">
+        {% csrf_token %}
+
+        <h2>Datos de la receta</h2>
+        
+        <div class="form-container">
+            <div class="form-group full-width">
+                {{ receta_form.Nombre_Receta.label_tag }}
+                {{ receta_form.Nombre_Receta }}
+            </div>
+
+            <div class="form-group full-width">
+                {{ receta_form.Categoria.label_tag }}
+                {{ receta_form.Categoria }}
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half-width">
+                    {{ receta_form.Aporte_Calorico.label_tag }}
+                    {{ receta_form.Aporte_Calorico }}
+                </div>
+                <div class="form-group half-width">
+                    {{ receta_form.Tiempo_Preparacion.label_tag }}
+                    {{ receta_form.Tiempo_Preparacion }}
+                </div>
+            </div>
+
+            <div class="form-group full-width">
+                {{ receta_form.imagen.label_tag }}
+                {{ receta_form.imagen }}
+            </div>
+            <div class="form-row">
+                <div class="form-group half-width">
+                    {{ receta_form.Seccion.label_tag }}
+                    {{ receta_form.Seccion }}
+                </div>
+                <div class="form-group half-width">
+                    {{ receta_form.Asignatura.label_tag }}
+                    {{ receta_form.Asignatura }}
+                </div>
+            </div>
+        </div>
+
+        <h2>Ingredientes</h2>
+
+        <div class="ingrediente-controls">
+            <div class="ing-input-group">
+                <label>Ingrediente</label>
+                <input type="text" id="ingrediente-search" class="form-control" placeholder="Buscar ingrediente...">
+                <div id="ingrediente-results" class="search-results" style="position:relative"></div>
+                <select id="ingrediente-select" class="form-select" style="display:none;">
+                    <option value="">Selecciona un ingrediente</option>
+                    {% for ingrediente in ingredientes %}
+                    <option value="{{ ingrediente.id }}" data-precio="{{ ingrediente.costo_unitario }}"
+                        data-calidad="{{ ingrediente.calidad }}" data-abrev="{{ ingrediente.unidad_abreviatura }}">
+                        {{ ingrediente.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="ing-input-group small">
+                <label>Cantidad</label>
+                <input type="number" step="0.01" id="cantidad-input" placeholder="0" class="form-control">
+            </div>
+
+            <div class="ing-input-group small">
+                <label>Peso (por unidad)</label>
+                <input type="number" step="0.01" id="peso-input" placeholder="0" class="form-control">
+            </div>
+
+            <div class="ing-input-group medium">
+                <label>Unidad</label>
+                <select id="unidad-select" class="form-select">
+                    <option value="">Selecciona</option>
+                    {% for unidad in unidades %}
+                    <option value="{{ unidad.abreviatura }}">
+                        {{ unidad.nombre }} ({{ unidad.abreviatura }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="ing-btn-group">
+                <button type="button" id="add-ingrediente" class="btn btn-primary">AGREGAR</button>
+            </div>
+        </div>
+
+        <table id="ingredientes-table" class="ingredientes-tabla">
+            <thead>
+                <tr>
+                        <th>Ingrediente</th>
+                        <th>Cantidad</th>
+                        <th>Peso total</th>
+                        <th>Unidad</th>
+                        <th>Precio</th>
+                        <th>Calidad</th>
+                        <th>Acción</th>
+                    </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <input type="hidden" name="ingredientes_json" id="ingredientes-json">
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">SUBIR RECETA</button>
+        </div>
+    </form>
+</div>
+
+{% block scripts %}
+<script>
+    const selectIngrediente = document.getElementById('ingrediente-select');
+    const cantidadInput = document.getElementById('cantidad-input');
+    const unidadSelect = document.getElementById('unidad-select');
+    const addBtn = document.getElementById('add-ingrediente');
+    const tableBody = document.querySelector('#ingredientes-table tbody');
+    const ingredientesJson = document.getElementById('ingredientes-json');
+
+    let ingredientesLista = [];
+
+    
+    const ingredienteSearch = document.getElementById('ingrediente-search');
+    const ingredienteResults = document.getElementById('ingrediente-results');
+
+    function buildSearchResults() {
+        const q = ingredienteSearch.value.trim().toLowerCase();
+        ingredienteResults.innerHTML = '';
+
+        if (!q) return;
+
+        const options = Array.from(selectIngrediente.querySelectorAll('option'))
+            .filter(opt => opt.value !== '' && opt.textContent.toLowerCase().includes(q));
+
+        const list = document.createElement('ul');
+        list.style.listStyle = 'none';
+        list.style.margin = 0;
+        list.style.padding = '4px';
+        list.style.background = '#222';
+        list.style.border = '1px solid #444';
+        list.style.maxHeight = '180px';
+        list.style.overflow = 'auto';
+
+        options.slice(0, 12).forEach(opt => {
+            const li = document.createElement('li');
+            li.textContent = opt.textContent.trim();
+            li.dataset.value = opt.value;
+            li.style.padding = '6px 8px';
+            li.style.cursor = 'pointer';
+            li.style.color = '#fff';
+            li.onmouseenter = () => li.style.background = '#333';
+            li.onmouseleave = () => li.style.background = 'transparent';
+            li.onclick = () => {
+                selectIngrediente.value = li.dataset.value;
+                ingredienteSearch.value = li.textContent;
+                ingredienteResults.innerHTML = '';
+                
+            };
+            list.appendChild(li);
+        });
+
+        ingredienteResults.appendChild(list);
+    }
+
+    ingredienteSearch.addEventListener('input', buildSearchResults);
+    document.addEventListener('click', (e) => {
+        if (!ingredienteResults.contains(e.target) && e.target !== ingredienteSearch) {
+            ingredienteResults.innerHTML = '';
+        }
+    });
+
+    function renderizarTabla() {
+        tableBody.innerHTML = '';
+
+        ingredientesLista.forEach((ing, idx) => {
+            const row = document.createElement('tr');
+
+            
+            const pesoTotalDisplay = (ing.peso_total !== undefined && ing.peso_total !== null) ? ing.peso_total : '-';
+
+            row.innerHTML = `
+            <td>${ing.nombre}</td>
+            <td>${ing.cantidad}</td>
+            <td>${pesoTotalDisplay}</td>
+            <td>${ing.unidad}</td>
+            <td>$${ing.precio}</td>
+            <td>${ing.calidad}</td>
+            <td>
+                <button type="button" data-idx="${idx}" class="btn btn-secondary eliminar-btn">
+                    Eliminar
+                </button>
+            </td>
+        `;
+
+            tableBody.appendChild(row);
+        });
+
+        document.querySelectorAll(".eliminar-btn").forEach(boton => {
+            boton.addEventListener("click", (e) => {
+                const index = e.target.dataset.idx;
+                ingredientesLista.splice(index, 1);
+                renderizarTabla();
+            });
+        });
+
+        ingredientesJson.value = JSON.stringify(ingredientesLista);
+    }
+
+    addBtn.addEventListener("click", () => {
+
+        const selectedOption = selectIngrediente.selectedOptions[0];
+
+        if (!selectedOption)
+            return mostrarError("Selecciona un ingrediente.");
+
+        const id = selectedOption.value;
+        const nombre = selectedOption.text;
+        const precio = parseFloat(selectedOption.dataset.precio || 0);
+        const calidad = selectedOption.dataset.calidad || "";
+
+        const cantidad = parseFloat(cantidadInput.value);
+        const unidad = unidadSelect.value;
+        const peso = parseFloat(document.getElementById('peso-input').value || 0);
+
+        if (!cantidad || cantidad <= 0)
+            return mostrarError("Cantidad inválida.");
+
+        if (!unidad)
+            return mostrarError("Selecciona una unidad.");
+
+        const peso_total = peso > 0 ? (peso * cantidad) : null;
+
+        
+        const originalAbrev = selectedOption.dataset.abrev || '';
+        if (originalAbrev && unidad && originalAbrev !== unidad) {
+            const ok = confirm(`Este ingrediente fue creado con la unidad de medida '${originalAbrev}'.\n¿Deseas agregarlo con la unidad '${unidad}' igualmente? (Aceptar = sí, Cancelar = no)`);
+            if (!ok) {
+                return; 
+            }
+        }
+
+        
+        const existingIndex = ingredientesLista.findIndex(it => it.id == id && it.unidad == unidad);
+        if (existingIndex !== -1) {
+            const existing = ingredientesLista[existingIndex];
+            const newCantidad = parseFloat(existing.cantidad) + parseFloat(cantidad);
+            existing.cantidad = Number.isInteger(newCantidad) ? newCantidad : parseFloat(newCantidad.toFixed(2));
+            
+            if (peso > 0) {
+                existing.peso = peso;
+                existing.peso_total = parseFloat((peso * existing.cantidad).toFixed(2));
+            } else {
+                if (existing.peso) {
+                    existing.peso_total = parseFloat((existing.peso * existing.cantidad).toFixed(2));
+                } else {
+                    existing.peso_total = null;
+                }
+            }
+        } else {
+            ingredientesLista.push({
+                id,
+                nombre,
+                cantidad,
+                peso: peso > 0 ? peso : null,
+                peso_total: peso_total,
+                unidad,
+                precio,
+                calidad
+            });
+        }
+
+        renderizarTabla();
+
+        cantidadInput.value = "";
+        unidadSelect.value = "";
+        document.getElementById('peso-input').value = "";
+        selectIngrediente.value = "";
+    });
+
+    function mostrarError(msg) {
+        const error = document.createElement("p");
+        error.style.color = "red";
+        error.textContent = msg;
+        document.querySelector(".ingrediente-form").appendChild(error);
+
+        setTimeout(() => error.remove(), 2500);
+    }
+</script>
+{% endblock %}
+{% endblock %}

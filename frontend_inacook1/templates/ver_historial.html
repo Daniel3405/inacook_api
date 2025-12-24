@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Historial - Inacook{% endblock %}
+
+{% block content %}
+<div class="container historial-container">
+
+    <h1>Historial de modificaciones</h1>
+
+    {% if is_profesor %}
+    <div style="margin-bottom:15px;">
+        <label for="alumno-search">Ver historial de alumno:</label>
+        <input type="text" id="alumno-search" class="form-control" placeholder="Buscar alumno..." style="display:inline-block; width:220px; margin-left:8px;">
+        <div id="alumno-results" class="search-results" style="position:relative; display:inline-block; vertical-align:top; margin-left:6px;"></div>
+        <input type="hidden" id="alumno-selected" value="{{ selected_usuario_id|default:'' }}">
+    </div>
+    {% endif %}
+
+    {% if historial %}
+    <table class="historial-tabla">
+        <thead>
+            <tr>
+                <th class="text-center">Fecha de modificación</th>
+                <th class="text-center">Usuario</th>
+                <th class="text-center">Receta</th>
+                <th class="text-center">Cambio realizado</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for h in historial %}
+            <tr>
+                <td class="text-center">{{ h.fecha_modificacion|date:"d/m/Y H:i" }}</td>
+
+                <td class="text-center">
+                    {% if h.usuario_nombre %}
+                    {{ h.usuario_nombre }}
+                    {% else %}
+                    Desconocido
+                    {% endif %}
+                </td>
+
+                <td class="text-center">
+                    {% if h.receta_nombre %}
+                    {{ h.receta_nombre }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+
+                <td class="text-center">{{ h.cambio_realizado }}</td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        (function(){
+            
+            const alumnos = [
+                {% for a in alumnos %}
+                { id: '{{ a.id }}', username: '{{ a.username }}' }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ];
+
+            const search = document.getElementById('alumno-search');
+            const results = document.getElementById('alumno-results');
+            const hidden = document.getElementById('alumno-selected');
+
+            if (!search || !results) return;
+
+            function buildList(q){
+                results.innerHTML = '';
+                const term = (q||'').trim().toLowerCase();
+                const matches = term ? alumnos.filter(a => a.username.toLowerCase().includes(term)) : alumnos.slice(0, 20);
+                if (!matches.length){
+                    const empty = document.createElement('div');
+                    empty.textContent = 'No hay coincidencias';
+                    empty.style.padding = '6px 10px';
+                    empty.style.color = '#fff';
+                    results.appendChild(empty);
+                    return;
+                }
+                const ul = document.createElement('ul');
+                ul.style.listStyle = 'none'; ul.style.margin = 0; ul.style.padding = 0; ul.style.background = '#222'; ul.style.border = '1px solid #444'; ul.style.maxHeight = '200px'; ul.style.overflow = 'auto'; ul.style.minWidth = '220px';
+                matches.forEach(m => {
+                    const li = document.createElement('li');
+                    li.textContent = m.username;
+                    li.dataset.id = m.id;
+                    li.style.padding = '6px 8px'; li.style.cursor = 'pointer'; li.style.color = '#fff';
+                    li.onmouseenter = () => li.style.background = '#333';
+                    li.onmouseleave = () => li.style.background = 'transparent';
+                    li.onclick = () => selectAlumno(m.id, m.username);
+                    ul.appendChild(li);
+                });
+                results.appendChild(ul);
+            }
+
+            function selectAlumno(id, username){
+                hidden.value = id || '';
+                search.value = username || '';
+                results.innerHTML = '';
+                const params = new URLSearchParams(window.location.search);
+                if (id) params.set('usuario_id', id); else params.delete('usuario_id');
+                window.location.search = params.toString();
+            }
+
+            search.addEventListener('input', (e)=> buildList(e.target.value));
+            document.addEventListener('click', (e)=>{
+                if (!results.contains(e.target) && e.target !== search) results.innerHTML = '';
+            });
+
+            
+            const pre = hidden.value;
+            if (pre){
+                const found = alumnos.find(a => a.id === pre || a.id === String(pre));
+                if (found) search.value = found.username;
+            }
+        })();
+    </script>
+
+    {% else %}
+    <p class="mensaje-vacio">
+        No hay registros en el historial todavía.
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Inacook{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+
+            <a href="{% url 'dashboard' %}" class="nav-logo">Inacook</a>
+
+            <ul class="nav-links">
+
+                {% if request.session.token %}
+                <li><a href="{% url 'ver_recetas' %}">Mis Recetas</a></li>
+                <li><a href="{% url 'subir_receta' %}">Subir Receta</a></li>
+                <li><a href="{% url 'ver_ingredientes' %}">Ingredientes</a></li>
+                <li><a href="{% url 'ver_historial' %}">Historial</a></li>
+                <li><a href="{% url 'calculadora' %}">Calculadora</a></li>
+                <li><a href="{% url 'perfil' %}">Perfil</a></li>
+
+                {% if request.session.rol_nombre == "Profesor" or request.session.rol_nombre == "profesor" %}
+                <li><a href="{% url 'ver_recetas_alumnos' %}">Recetas de Alumnos</a></li>
+                <li><a href="{% url 'crear_ingrediente' %}">Nuevo Ingrediente</a></li>
+                {% endif %}
+                <li>
+                    <form id="logout-form" action="{% url 'logout' %}" method="post" style="display:none;">
+                        {% csrf_token %}
+                    </form>
+
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        Cerrar Sesión
+                    </a>
+                </li>
+
+                {% else %}
+                <li><a href="{% url 'home' %}">Iniciar Sesión</a></li>
+                {% endif %}
+
+            </ul>
+        </div>
+    </nav>
+
+    <div class="messages-container">
+        {% if messages %}
+        {% for m in messages %}
+        <div class="alert {{ m.tags }}">
+            {{ m }}
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    <main class="content">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+
+</body>
+
+</html>

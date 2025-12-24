@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mi Perfil - Inacook{% endblock %}
+
+{% block content %}
+
+<div class="perfil-container">
+
+    <h1>Mi Perfil</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="perfil-info">
+
+            <div class="perfil-row">
+                <label><strong>Nombre de usuario:</strong></label>
+                <input type="text" name="username" value="{{ usuario.username }}" autocomplete="username">
+            </div>
+
+            <div class="perfil-row">
+                <label><strong>Correo electrónico:</strong></label>
+                <input type="email" name="email" value="{{ usuario.email }}" autocomplete="email">
+            </div>
+
+            <div class="perfil-row">
+                <label><strong>Rol:</strong></label>
+                <span class="perfil-rol">
+                    {{ rol_nombre|default:usuario.nombre_rol|default:"Sin rol" }}
+                </span>
+            </div>
+
+        </div>
+
+        <div class="perfil-actions">
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+
+            <a href="{% url 'cambiar_contraseña' %}" class="btn btn-secondary">
+                Cambiar contraseña
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

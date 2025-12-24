@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Recetas de Alumnos - Inacook{% endblock %}
+
+{% block content %}
+<div class="container recetas-alumnos-container">
+
+    <h1>Recetas de Alumnos</h1>
+
+    <div class="card-filtros">
+        <form method="GET" class="form-filtros">
+
+            <div class="filtro-item">
+                <label>Buscar</label>
+                <input type="text" name="buscar" value="{{ request.GET.buscar }}" placeholder="Ej: Pastel, Ensalada...">
+            </div>
+
+            <div class="filtro-item">
+                <label>Categoría</label>
+                <select name="categoria">
+                    <option value="">Todas</option>
+                    {% for categoria in categorias %}
+                    <option value="{{ categoria }}" {% if request.GET.categoria == categoria %}selected{% endif %}>
+                        {{ categoria }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filtro-item">
+                <label>Sección</label>
+                <input type="text" name="seccion" value="{{ request.GET.seccion }}" placeholder="Ej: 1A, 2B...">
+            </div>
+
+            <div class="filtro-item">
+                <label>Asignatura</label>
+                <input type="text" name="asignatura" value="{{ request.GET.asignatura }}" placeholder="Ej: Cocina básica...">
+            </div>
+
+            <div class="filtro-item">
+                <label>Letra inicial</label>
+                <select name="letra">
+                    <option value="">Todas</option>
+                    {% for letra in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" %}
+                    <option value="{{ letra }}" {% if request.GET.letra == letra %}selected{% endif %}>
+                        {{ letra }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Filtrar</button>
+        </form>
+    </div>
+
+    {% if recetas_data %}
+    <table class="tabla-recetas">
+        <thead>
+            <tr>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Alumno</th>
+                <th>Sección</th>
+                <th>Asignatura</th>
+                <th>Categoría</th>
+                <th>Tiempo</th>
+                <th>Comprobante</th>
+                <th>Receta</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for data in recetas_data %}
+            {% with receta=data.receta precio=data.precio usuario=data.usuario %}
+            <tr>
+
+                <td style="text-align:center;">
+                    {% if receta.imagen %}
+                        {% if receta.imagen.url %}
+                            <img src="{{ receta.imagen.url }}" class="tabla-img">
+                        {% else %}
+                            <img src="{{ receta.imagen }}" class="tabla-img">
+                        {% endif %}
+                    {% else %}
+                        <span class="no-image">Sin imagen</span>
+                    {% endif %}
+                </td>
+
+                <td>{{ data.nombre }}</td>
+                <td>{{ usuario }}</td>
+                <td>{{ data.seccion|default:"-" }}</td>
+                <td>{{ data.asignatura|default:"-" }}</td>
+                <td>{{ data.categoria }}</td>
+                <td>{{ data.tiempo }}</td>
+
+                <td class="acciones-td text-center">
+                    <a href="{% url 'ver_comprobante' receta.id %}" class="btn btn-secondary btn-sm">Ver</a>
+                </td>
+                <td class="acciones-td text-center">
+                    <a href="{% url 'editar_receta' receta.id %}" class="btn btn-secondary btn-sm">Ver</a>
+                </td>
+
+
+            </tr>
+            {% endwith %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+    <p class="mensaje-vacio">No hay recetas de alumnos registradas.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

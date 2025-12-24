@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ingredientes - Inacook{% endblock %}
+
+{% block content %}
+<div class="container ingredientes-container">
+
+    <h1>Ingredientes Registrados</h1>
+
+    <a href="{% url 'crear_ingrediente' %}" class="btn btn-primary"
+        style="background-color:#ff4d4d; border-color:#ff4d4d; margin-bottom:25px; display:inline-block;">
+        Nuevo Ingrediente
+    </a>
+
+    {% if ingredientes %}
+    <table class="tabla-ingredientes">
+        <thead>
+            <tr>
+                <th class="text-center">Nombre</th>
+                <th class="text-center">Calidad</th>
+                <th class="text-center">Costo Unitario</th>
+                <th class="text-center">Unidad</th>
+                <th class="text-center">Creado por</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ing in ingredientes %}
+            <tr>
+                <td class="text-center">{{ ing.nombre }}</td>
+                <td class="text-center">{{ ing.calidad }}</td>
+                <td class="text-center">${{ ing.costo_unitario }}</td>
+                {% if ing.unidad_abreviatura %}
+                <td class="text-center">{{ ing.unidad_nombre }} ({{ ing.unidad_abreviatura }})</td>
+                <td class="text-center">{{ ing.usuario_nombre|default:ing.usuario|default:"Desconocido" }}</td>
+                {% else %}
+                <td class="text-center">{{ ing.unidad_nombre }}</td>
+                <td class="text-center">{{ ing.usuario_nombre|default:ing.usuario|default:"Desconocido" }}</td>
+                {% endif %}
+
+                <td class="text-center">
+                    <div class="acciones-btn-group">
+                        <a href="{% url 'editar_ingrediente' ing.id %}" class="btn btn-primary">
+                            Editar
+                        </a>
+
+                        <a href="{% url 'eliminar_ingrediente' ing.id %}" class="btn btn-danger">
+                            Eliminar
+                        </a>
+                    </div>
+                </td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% else %}
+    <p class="sin-datos">No hay ingredientes agregados.</p>
+    {% endif %}
+</div>
+{% endblock %}
