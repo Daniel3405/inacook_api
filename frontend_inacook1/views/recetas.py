@@ -310,7 +310,19 @@ def ver_recetas(request):
         rels = Receta_Ingrediente.objects.filter(receta=r).select_related('ingrediente')
         for rel in rels:
             total_precio += (rel.ingrediente.costo_unitario * rel.cantidad)
-            
+
+        creado_por = "Desconocido"
+        try:
+            if r.usuario:
+                # Comparar ids (user_id puede venir como str)
+                if user_id is not None and int(user_id) == int(getattr(r.usuario, "id", -1)):
+                    creado_por = "Tú"
+                else:
+                    creado_por = r.usuario.user.username if getattr(r.usuario, "user", None) else "Desconocido"
+        except Exception:
+            # En caso de cualquier inconsistencia, fallback seguro
+            creado_por = r.usuario.user.username if getattr(r.usuario, "user", None) else "Desconocido"
+
         recetas_data.append({
             "receta": r,
             "precio": round(total_precio, 2) if total_precio > 0 else "No calculado"
