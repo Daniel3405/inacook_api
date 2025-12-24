@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .. forms import IngredienteForm
-from inacook.models import Ingrediente, UnidadMedicion
+from inacook.models import Ingrediente, UnidadMedicion, Usuario
 
 def crear_ingrediente(request):
     unidades_data = UnidadMedicion.objects.all()
@@ -15,12 +15,20 @@ def crear_ingrediente(request):
             try:
                 unidad_obj = UnidadMedicion.objects.get(id=int(form.cleaned_data['UnidadMedicion']))
                 
+                usuario_obj = None
+                if request.user and request.user.is_authenticated:
+                    try:
+                        usuario_obj = Usuario.objects.get(user=request.user)
+                    except Usuario.DoesNotExist:
+                        usuario_obj = None
+
                 Ingrediente.objects.create(
                     nombre=form.cleaned_data['Nombre_Ingrediente'],
                     calidad=form.cleaned_data['Calidad'],
                     costo_unitario=form.cleaned_data['Costo_Unitario'],
                     peso=form.cleaned_data.get('Peso') or 0.0,
-                    unidad_medicion=unidad_obj
+                    unidad_medicion=unidad_obj,
+                    usuario=usuario_obj
                 )
                 messages.success(request, "Ingrediente creado correctamente")
                 return redirect('ver_ingredientes')
