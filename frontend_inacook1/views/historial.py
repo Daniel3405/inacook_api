@@ -1,11 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib import messages
 from inacook.models import Historial, Usuario
 from django.utils.dateparse import parse_datetime
 
 def ver_historial(request):
     if not request.session.get('token'):
-        pass # Or redirect login, old code didn't force redirect, just empty data
+        return redirect('login')
 
     # Usuarios para selects y lógica de roles
     try:

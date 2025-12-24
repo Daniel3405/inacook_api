@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction
-from inacook.models import Receta, Receta_Ingrediente, Comprobante, Ingrediente, UnidadMedicion, Usuario
+from inacook.models import Receta, Receta_Ingrediente, Comprobante, Ingrediente, UnidadMedicion, Usuario, Historial
 from ..forms import RecetaForm
 import json
 
@@ -52,7 +52,15 @@ def subir_receta(request):
                         asignatura=form.cleaned_data.get('Asignatura'),
                         imagen=request.FILES.get('imagen')
                     )
-
+                    try:
+                        Historial.objects.create(
+                            receta=receta,
+                        usuario=usuario_obj,
+                            cambio_realizado="Receta creada desde frontend"
+                        )
+                    except Exception:
+                        pass
+                    
                     # Procesar Ingredientes
                     ingredientes_json = request.POST.get('ingredientes_json')
                     subtotal = 0
@@ -173,6 +181,22 @@ def editar_receta(request, id):
                         receta.imagen = request.FILES['imagen']
                     
                     receta.save()
+                    try:
+                        user_id = request.session.get('user_id')
+                        usuario_editor = None
+                        if user_id:
+                            try:
+                                usuario_editor = Usuario.objects.get(id=user_id)
+                            except Usuario.DoesNotExist:
+                                usuario_editor = None
+
+                        Historial.objects.create(
+                        receta=receta,
+                        usuario=usuario_editor or receta.usuario,
+                        cambio_realizado="Receta editada desde frontend"
+                        )
+                    except Exception:
+                        pass
                     
                     # Actualizar Ingredientes
                     ingredientes_json = request.POST.get('ingredientes_json')
