@@ -52,11 +52,28 @@ def subir_receta(request):
                         asignatura=form.cleaned_data.get('Asignatura'),
                         imagen=request.FILES.get('imagen')
                     )
+
+                    try:
+                        usuario_para_historial = usuario_obj
+                        if not usuario_para_historial and getattr(request, 'user', None) and request.user.is_authenticated:
+                            try:
+                                usuario_para_historial = Usuario.objects.get(user=request.user)
+                            except Usuario.DoesNotExist:
+                                usuario_para_historial = None
+
+                        Historial.objects.create(
+                        receta=receta,
+                        usuario=usuario_para_historial,
+                        cambio_realizado="Receta creada desde frontend"
+                        )
+                    except Exception:
+                        pass
+
                     try:
                         Historial.objects.create(
                             receta=receta,
                         usuario=usuario_obj,
-                            cambio_realizado="Receta creada desde frontend"
+                            cambio_realizado="Receta creada"
                         )
                     except Exception:
                         pass
@@ -182,22 +199,34 @@ def editar_receta(request, id):
                     
                     receta.save()
                     try:
-                        user_id = request.session.get('user_id')
+    # Priorizar session user_id, luego request.user, luego fallback a receta.usuario
                         usuario_editor = None
+
+                        user_id = request.session.get('user_id')
                         if user_id:
                             try:
                                 usuario_editor = Usuario.objects.get(id=user_id)
                             except Usuario.DoesNotExist:
                                 usuario_editor = None
 
+    # Si no hay user_id en sesión, intentar con request.user (autenticado)
+                        if not usuario_editor and getattr(request, 'user', None) and request.user.is_authenticated:
+                            try:
+                                usuario_editor = Usuario.objects.get(user=request.user)
+                            except Usuario.DoesNotExist:
+                                usuario_editor = None
+
+    # Finalmente usar el propietario de la receta si no se encontró editor
+                        usuario_para_historial = usuario_editor or receta.usuario
+
                         Historial.objects.create(
                         receta=receta,
-                        usuario=usuario_editor or receta.usuario,
+                        usuario=usuario_para_historial,
                         cambio_realizado="Receta editada desde frontend"
                         )
                     except Exception:
                         pass
-                    
+
                     # Actualizar Ingredientes
                     ingredientes_json = request.POST.get('ingredientes_json')
                     if ingredientes_json:
