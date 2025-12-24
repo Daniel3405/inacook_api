@@ -5,7 +5,7 @@ from django.utils.dateparse import parse_datetime
 
 def ver_historial(request):
     if not request.session.get('token'):
-        pass # Or redirect login, old code didn't force redirect, just empty data
+        pass  # o: return redirect('login')
 
     # Usuarios para selects y lógica de roles
     try:
@@ -24,15 +24,20 @@ def ver_historial(request):
     historial_qs = historial_qs.order_by('-fecha_modificacion')
     
     # Preparar datos para template (lista de dicts o objetos)
-    # El template usa h.fecha_modificacion. 
-    # El codigo viejo parseaba fecha from string JSON. Model devuelve datetime object.
-    
     historial = []
     for h in historial_qs:
+        usuario_nombre = 'Desconocido'
+        if h.usuario and getattr(h.usuario, 'user', None):
+            usuario_nombre = h.usuario.user.username
+
+        receta_nombre = h.receta.nombre if h.receta else '-'
+
         historial.append({
             'id': h.id,
             'receta': h.receta,
+            'receta_nombre': receta_nombre,
             'usuario': h.usuario,
+            'usuario_nombre': usuario_nombre,
             'fecha_entrega': h.fecha_entrega,
             'fecha_modificacion': h.fecha_modificacion,
             'cambio_realizado': h.cambio_realizado
@@ -55,17 +60,11 @@ def ver_historial(request):
     for u in usuarios:
         rol_name = u.rol.nombre.lower() if u.rol else ''
         if 'alumno' in rol_name or 'estudiante' in rol_name:
-             # Convertir a dict o pasar objeto, el template usa u.id, u.nombre_rol?
-             # El anterior codigo usaba u.get('nombre_rol')
-             # Si pasamos objeto Usuario, en template {{ u.rol.nombre }} funciona si template fue adaptado o si usamos un wrapper.
-             # Pero el template original seguramente usa {{ u.username }} q no existe en Usuario, sino en Usuario.user.username
-             # ASI QUE CREAREMOS DICTS para compatibilidad máxima
-             
-             alumnos.append({
-                 'id': u.id,
-                 'username': u.user.username if u.user else 'Sin usuario',
-                 'nombre_rol': u.rol.nombre if u.rol else 'Sin rol'
-             })
+            alumnos.append({
+                'id': u.id,
+                'username': u.user.username if u.user else 'Sin usuario',
+                'nombre_rol': u.rol.nombre if u.rol else 'Sin rol'
+            })
 
     return render(
         request,
@@ -77,5 +76,3 @@ def ver_historial(request):
             "selected_usuario_id": usuario_id_filter
         }
     )
-
-
