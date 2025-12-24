@@ -47,7 +47,18 @@ def ver_ingredientes(request):
     if not request.session.get('token'):
         return redirect('login')
     
-    ingredientes_qs = Ingrediente.objects.select_related('unidad_medicion', 'usuario__user').all()
+    user_id = request.session.get('user_id')
+    usuario_actual = None
+    if user_id:
+        try:
+            usuario_actual = Usuario.objects.get(id=user_id)
+        except Usuario.DoesNotExist:
+            usuario_actual = None
+    
+    if usuario_actual and usuario_actual.rol and usuario_actual.rol.nombre.lower() == 'estudiante':
+        ingredientes_qs = Ingrediente.objects.filter(usuario=usuario_actual).select_related('unidad_medicion', 'usuario__user')
+    else:
+        ingredientes_qs = Ingrediente.objects.select_related('unidad_medicion', 'usuario__user').all()
     
     ingredientes = []
     for ing in ingredientes_qs:
