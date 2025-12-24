@@ -64,7 +64,7 @@ def subir_receta(request):
                         Historial.objects.create(
                         receta=receta,
                         usuario=usuario_para_historial,
-                        cambio_realizado="Receta creada desde frontend"
+                        cambio_realizado="Receta creada"
                         )
                     except Exception:
                         pass
@@ -222,7 +222,7 @@ def editar_receta(request, id):
                         Historial.objects.create(
                         receta=receta,
                         usuario=usuario_para_historial,
-                        cambio_realizado="Receta editada desde frontend"
+                        cambio_realizado="Receta editada"
                         )
                     except Exception:
                         pass
